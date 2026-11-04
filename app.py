@@ -1,9 +1,15 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash
+from flask import Flask, render_template, redirect, url_for, request, session, flash, abort
 import sqlite3
+import os
+import secrets
+import hmac
 from pathlib import Path
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = "troque-esta-chave-por-uma-chave-secreta"
+app.secret_key = os.environ.get("SECRET_KEY", "chave-local-apenas-para-testes-nao-usar-em-producao")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+ESTADOS_ENCOMENDA = ["Recebida", "Em preparação", "Enviada", "Entregue", "Cancelada"]
 DB = Path(__file__).with_name("loja.db")
 
 PRODUTOS_INICIAIS = [
@@ -34,9 +40,17 @@ def iniciar_bd():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 cliente TEXT NOT NULL, telefone TEXT NOT NULL,
                 endereco TEXT NOT NULL, total INTEGER NOT NULL,
-                itens TEXT NOT NULL
+                itens TEXT NOT NULL,
+                estado TEXT NOT NULL DEFAULT 'Recebida',
+                criada_em TEXT NOT NULL DEFAULT ''
             )
         """)
+        # Atualiza também bases de dados antigas, sem apagar encomendas existentes.
+        colunas = {linha[1] for linha in con.execute("PRAGMA table_info(encomendas)").fetchall()}
+        if "estado" not in colunas:
+            con.execute("ALTER TABLE encomendas ADD COLUMN estado TEXT NOT NULL DEFAULT 'Recebida'")
+        if "criada_em" not in colunas:
+            con.execute("ALTER TABLE encomendas ADD COLUMN criada_em TEXT NOT NULL DEFAULT ''")
         if con.execute("SELECT COUNT(*) FROM produtos").fetchone()[0] == 0:
             # Imagens ilustrativas; pode trocar os links pelas fotografias dos seus produtos.
             imagens = [
@@ -128,13 +142,86 @@ def finalizar():
         )
         with conectar() as con:
             con.execute(
-                "INSERT INTO encomendas (cliente,telefone,endereco,total,itens) VALUES (?,?,?,?,?)",
-                (cliente, telefone, endereco, total, resumo)
+                "INSERT INTO encomendas (cliente,telefone,endereco,total,itens,estado,criada_em) VALUES (?,?,?,?,?,?,?)",
+                (cliente, telefone, endereco, total, resumo, "Recebida", datetime.now().strftime("%d/%m/%Y %H:%M"))
             )
         session["carrinho"] = {}
         return render_template("sucesso.html", cliente=cliente, total=total)
 
     return render_template("finalizar.html", itens=itens, total=total)
+
+
+
+def administrador_autenticado():
+    return session.get("administrador") is True
+
+
+def csrf_token():
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_urlsafe(32)
+    return session["csrf_token"]
+
+
+@app.context_processor
+def disponibilizar_csrf():
+    return {"csrf_token": csrf_token}
+
+
+@app.route("/admin", methods=["GET", "POST"])
+def admin():
+    if not ADMIN_PASSWORD:
+        return ("A área de administração ainda não foi configurada. No Render, adicione a variável ADMIN_PASSWORD e faça novo deploy.", 503)
+    if administrador_autenticado():
+        return redirect(url_for("admin_encomendas"))
+    if request.method == "POST":
+        token = request.form.get("csrf_token", "")
+        if not hmac.compare_digest(token, session.get("csrf_token", "")):
+            abort(400)
+        password = request.form.get("password", "")
+        if hmac.compare_digest(password, ADMIN_PASSWORD):
+            session.clear()
+            session["administrador"] = True
+            flash("Sessão iniciada com sucesso.")
+            return redirect(url_for("admin_encomendas"))
+        flash("Palavra-passe incorreta.")
+    return render_template("admin_login.html")
+
+
+@app.route("/admin/encomendas")
+def admin_encomendas():
+    if not administrador_autenticado():
+        return redirect(url_for("admin"))
+    with conectar() as con:
+        encomendas = con.execute("SELECT * FROM encomendas ORDER BY id DESC").fetchall()
+    return render_template("admin_encomendas.html", encomendas=encomendas, estados=ESTADOS_ENCOMENDA)
+
+
+@app.post("/admin/encomenda/<int:encomenda_id>/estado")
+def admin_atualizar_estado(encomenda_id):
+    if not administrador_autenticado():
+        return redirect(url_for("admin"))
+    token = request.form.get("csrf_token", "")
+    if not hmac.compare_digest(token, session.get("csrf_token", "")):
+        abort(400)
+    estado = request.form.get("estado", "")
+    if estado not in ESTADOS_ENCOMENDA:
+        abort(400)
+    with conectar() as con:
+        con.execute("UPDATE encomendas SET estado = ? WHERE id = ?", (estado, encomenda_id))
+    flash(f"Estado da encomenda #{encomenda_id} atualizado.")
+    return redirect(url_for("admin_encomendas"))
+
+
+@app.post("/admin/sair")
+def admin_sair():
+    if not administrador_autenticado():
+        return redirect(url_for("admin"))
+    token = request.form.get("csrf_token", "")
+    if not hmac.compare_digest(token, session.get("csrf_token", "")):
+        abort(400)
+    session.clear()
+    flash("Terminaste a sessão de administração.")
+    return redirect(url_for("admin"))
 
 # Inicializa a base de dados tanto no uso local como no servidor web.
 iniciar_bd()

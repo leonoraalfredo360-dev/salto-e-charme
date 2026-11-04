@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="admin-cabecalho">
+  <div><h1>Encomendas recebidas</h1><p>{{ encomendas|length }} encomenda(s) registada(s)</p></div>
+  <form method="post" action="{{ url_for('admin_sair') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="botao botao-secundario" type="submit">Terminar sessão</button>
+  </form>
+</div>
+{% if encomendas %}
+  {% for e in encomendas %}
+  <article class="painel encomenda-admin">
+    <div class="encomenda-topo"><h2>Encomenda #{{ e.id }}</h2><strong>{{ e.total }} MT</strong></div>
+    <p><b>Data:</b> {{ e.criada_em or 'Data não disponível' }}</p>
+    <p><b>Cliente:</b> {{ e.cliente }}</p>
+    <p><b>Telefone:</b> <a href="tel:{{ e.telefone }}">{{ e.telefone }}</a></p>
+    <p><b>Endereço:</b> {{ e.endereco }}</p>
+    <p><b>Produtos:</b> {{ e.itens }}</p>
+    <form class="estado-form" method="post" action="{{ url_for('admin_atualizar_estado', encomenda_id=e.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Estado da encomenda
+        <select name="estado">
+          {% for estado in estados %}<option value="{{ estado }}" {% if e.estado == estado %}selected{% endif %}>{{ estado }}</option>{% endfor %}
+        </select>
+      </label>
+      <button class="botao" type="submit">Guardar estado</button>
+    </form>
+  </article>
+  {% endfor %}
+{% else %}
+  <div class="painel"><h2>Ainda não há encomendas</h2><p>Quando um cliente concluir uma compra, a encomenda aparecerá aqui.</p></div>
+{% endif %}
+{% endblock %}

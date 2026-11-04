@@ -11,3 +11,14 @@ select,input,textarea{font:inherit;border:1px solid #d8e0da;border-radius:8px;pa
 .avisos{max-width:1160px;margin:16px auto 0;padding:0 22px;color:var(--verde);font-weight:700}footer{text-align:center;padding:25px;color:#718078;font-size:13px}
 @media(max-width:760px){.hero{padding:30px}.hero-icon{font-size:70px;padding:0}.produtos{grid-template-columns:repeat(2,1fr)}.duas-colunas{grid-template-columns:1fr}.linha-carrinho{gap:9px}.linha-carrinho img{width:55px;height:55px}}
 @media(max-width:500px){.produtos{grid-template-columns:1fr}.cabecalho-produtos{align-items:flex-start;gap:12px;flex-direction:column}.hero-icon{display:none}.topo{padding:0 18px}nav{gap:12px}}
+
+/* Painel privado de administração */
+.admin-login { max-width: 520px; margin: 32px auto; }
+.admin-login .formulario { margin: 22px 0; }
+.admin-cabecalho, .encomenda-topo { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.encomenda-admin { margin: 18px 0; }
+.encomenda-admin h2 { margin: 0; }
+.estado-form { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin-top: 18px; padding-top: 16px; border-top: 1px solid #e5e5e5; }
+.estado-form label { display: grid; gap: 6px; min-width: 210px; }
+.estado-form select { padding: 11px; border: 1px solid #ccc; border-radius: 8px; font: inherit; }
+.botao-secundario { background: #555; }
