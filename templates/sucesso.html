@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div class="painel sucesso">
+  <div class="check">✓</div><h1>Encomenda recebida!</h1>
+  <p>Obrigado, {{ cliente }}. A sua encomenda foi registada.</p>
+  <h2>Total: {{ total }} MT</h2>
+  <p>Entraremos em contacto para combinar o pagamento e a entrega.</p>
+  <a class="botao" href="{{ url_for('inicio') }}">Voltar à loja</a>
+</div>
+{% endblock %}

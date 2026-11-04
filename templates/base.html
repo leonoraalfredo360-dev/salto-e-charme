@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ titulo or "Passo Certo | Loja de Calçados" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topo">
+  <a class="marca" href="{{ url_for('inicio') }}">👟 PASSO CERTO</a>
+  <nav>
+    <a href="{{ url_for('inicio') }}">Início</a>
+    <a href="{{ url_for('ver_carrinho') }}">🛒 Carrinho</a>
+  </nav>
+</header>
+{% with mensagens = get_flashed_messages() %}
+  {% if mensagens %}<div class="avisos">{% for msg in mensagens %}<p>{{ msg }}</p>{% endfor %}</div>{% endif %}
+{% endwith %}
+<main>{% block conteudo %}{% endblock %}</main>
+<footer>© 2026 Passo Certo · A sua loja de calçados</footer>
+</body>
+</html>

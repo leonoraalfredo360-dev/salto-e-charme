@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>O seu carrinho</h1>
+{% if itens %}
+<div class="painel">
+  {% for i in itens %}
+  <div class="linha-carrinho">
+    <img src="{{ i.produto.imagem }}" alt="">
+    <div class="crescer"><strong>{{ i.produto.nome }}</strong><p>{{ i.quantidade }} × {{ i.produto.preco }} MT</p></div>
+    <strong>{{ i.subtotal }} MT</strong>
+    <form method="post" action="{{ url_for('remover', produto_id=i.produto.id) }}"><button class="remover">Remover</button></form>
+  </div>
+  {% endfor %}
+  <div class="total"><span>Total</span><strong>{{ "{:,.0f}".format(total).replace(",", " ") }} MT</strong></div>
+  <a class="botao" href="{{ url_for('finalizar') }}">Finalizar encomenda</a>
+</div>
+{% else %}
+<div class="painel"><p>O carrinho ainda está vazio.</p><a class="botao" href="{{ url_for('inicio') }}">Ver produtos</a></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Finalizar encomenda</h1>
+<div class="duas-colunas">
+<form class="painel formulario" method="post">
+  <label>Nome completo<input name="cliente" required></label>
+  <label>Telefone<input name="telefone" type="tel" placeholder="+258..." required></label>
+  <label>Endereço de entrega<textarea name="endereco" rows="3" required></textarea></label>
+  <button class="botao largura-total">Confirmar encomenda</button>
+  <p class="nota">A loja irá entrar em contacto para confirmar o pagamento e a entrega.</p>
+</form>
+<aside class="painel"><h3>Resumo</h3>
+{% for i in itens %}<p>{{ i.produto.nome }} × {{ i.quantidade }} <strong class="direita">{{ i.subtotal }} MT</strong></p>{% endfor %}
+<hr><h2>Total: {{ total }} MT</h2></aside>
+</div>
+{% endblock %}

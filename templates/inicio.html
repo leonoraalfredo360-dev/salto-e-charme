@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<section class="hero">
+  <div><p class="etiqueta">CONFORTO • ESTILO • QUALIDADE</p>
+  <h1>Encontre o par perfeito.</h1>
+  <p>Calçados para todos os momentos. Escolha o seu favorito e faça a encomenda.</p>
+  <a class="botao" href="#produtos">Ver produtos</a></div>
+  <div class="hero-icon">👟</div>
+</section>
+<div class="cabecalho-produtos" id="produtos">
+  <div><h2>Os nossos calçados</h2><p>Preços em meticais (MT)</p></div>
+  <form method="get">
+    <select name="categoria" onchange="this.form.submit()">
+      <option value="">Todas as categorias</option>
+      {% for c in ["Masculino","Feminino","Infantil","Desportivo","Unissexo"] %}
+      <option value="{{ c }}" {% if categoria == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+<section class="produtos">
+{% for p in produtos %}
+  <article class="produto">
+    <img src="{{ p.imagem }}" alt="{{ p.nome }}" onerror="this.src='https://placehold.co/600x450?text=Calcado'">
+    <div class="produto-info">
+      <span class="categoria">{{ p.categoria }}</span>
+      <h3>{{ p.nome }}</h3>
+      <p class="preco">{{ "{:,.0f}".format(p.preco).replace(",", " ") }} MT</p>
+      <form method="post" action="{{ url_for('adicionar', produto_id=p.id) }}">
+        <button class="botao largura-total">Adicionar ao carrinho</button>
+      </form>
+    </div>
+  </article>
+{% else %}
+  <p>Não há produtos nesta categoria.</p>
+{% endfor %}
+</section>
+{% endblock %}
